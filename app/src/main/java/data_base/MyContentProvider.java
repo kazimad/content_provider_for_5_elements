@@ -33,11 +33,12 @@ public class MyContentProvider extends ContentProvider {
     private static final UriMatcher myUriMatcher;
     static final int URI_CONTACTS = 1;
     static final int URI_CONTACTS_ID = 2;
-//////
+
+    //////
     static {
         myUriMatcher = new UriMatcher(UriMatcher.NO_MATCH);
         myUriMatcher.addURI(AUTHORITY, PATH, URI_CONTACTS);
-        myUriMatcher.addURI(AUTHORITY, PATH + "/#",URI_CONTACTS_ID);
+        myUriMatcher.addURI(AUTHORITY, PATH + "/#", URI_CONTACTS_ID);
     }
 
     private SQLiteDatabase db;
@@ -89,7 +90,7 @@ public class MyContentProvider extends ContentProvider {
         }
         db = myOpenHelper.getWritableDatabase();
         Cursor myCursorContProv = db.query(mytable, null, selection, null, null, null, null);
-        myCursorContProv.setNotificationUri(getContext().getContentResolver(),uri);   // тут посмотреть !!!!!!!
+        myCursorContProv.setNotificationUri(getContext().getContentResolver(), uri);   // тут посмотреть !!!!!!!
         return myCursorContProv;
     }
 

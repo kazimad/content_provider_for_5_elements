@@ -1,17 +1,16 @@
 package com.example.content_provider_for_5_elements.app;
 
-import android.annotation.TargetApi;
+import android.app.IntentService;
+import android.app.Service;
 import android.content.ContentValues;
 import android.content.Context;
+import android.content.Intent;
 import android.net.Uri;
-import android.os.AsyncTask;
-
-import android.os.Build;
+import android.os.IBinder;
 import android.util.Log;
 
 import org.json.JSONArray;
 import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
@@ -19,21 +18,19 @@ import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.Locale;
 
 import data_base.MyContentProvider;
 import data_base.MyDataBase;
 
 /**
- * Created by Олег on 21.05.2014.
+ * Created by Олег on 03.06.2014.
  */
-class CounterTask extends AsyncTask<Void, Void, ContentValues[]> {
-    private Context myCounterContext;
+public class JsonService extends IntentService {
+
     public final String myLog = "myLog";
     public final Uri ID_FROM_DB = MyContentProvider.CONTENT_URI;
     int valueOfQueue = 100;
@@ -50,24 +47,20 @@ class CounterTask extends AsyncTask<Void, Void, ContentValues[]> {
     public String OUTFILE;
     public static String CounterTaskJsonPath;
 
-    CounterTask(Context context) {
-        this.myCounterContext = context;
+    public JsonService() {
+        super("myService");
     }
 
-
-    @TargetApi(Build.VERSION_CODES.KITKAT)
     @Override
-    protected ContentValues[] doInBackground(Void... params) {
+    protected void onHandleIntent(Intent intent) {
         OUTFILE = (MainActivity.getJsonPath() + "/newfile_" + System.currentTimeMillis() + ".json");
         try {
             URL url = new URL(PATH);
             InputStream is = url.openStream();
             OutputStream os = new FileOutputStream(OUTFILE);
-
             int length;
             while ((length = is.read()) != -1) { // reads by bytes while it is possible
                 os.write(length);
-
 
             }
             is.close();
@@ -87,7 +80,6 @@ class CounterTask extends AsyncTask<Void, Void, ContentValues[]> {
                 // this string contains the character sequence
                 readFile = sbFile.toString();
                 br.close();
-
             } catch (FileNotFoundException e) {
                 e.printStackTrace();
             } catch (IOException e) {
@@ -102,9 +94,6 @@ class CounterTask extends AsyncTask<Void, Void, ContentValues[]> {
             for (int i = 0; i < jsonArray.length(); i++) {
                 try {
                     Log.d(myLog, "enter to loop");
-
-//                    String number = jsonArray.getString(Integer.parseInt(NUMBER));
-//                    String window = jsonArray.getString(Integer.parseInt(WINDOW));
                     int number = jsonArray.getJSONObject(i).getInt(NUMBER);
                     int window = jsonArray.getJSONObject(i).getInt(WINDOW);
 
@@ -114,13 +103,12 @@ class CounterTask extends AsyncTask<Void, Void, ContentValues[]> {
                     tempValue.put(MyDataBase.Columns._ID, number);
                     cv[i] = tempValue;
 
-
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
             }
 
-            myCounterContext.getContentResolver().bulkInsert(ID_FROM_DB, cv);
+            this.getContentResolver().bulkInsert(ID_FROM_DB, cv);
 
         } catch (MalformedURLException e) {
             e.printStackTrace();
@@ -128,34 +116,6 @@ class CounterTask extends AsyncTask<Void, Void, ContentValues[]> {
             e.printStackTrace();
         }
 
-        return cv;
-    }
-//    @Override
-//    protected ContentValues[] doInBackground(Void... params) {
-//
-//        for (int i = 0; i <= valueOfQueue; i++) {
-//
-//
-//            ContentValues tempValue = new ContentValues();
-//            Log.d(myLog, "enter to loop");
-//            int random = (int) ((Math.random() * 5) + 1);
-//
-//            tempValue.put(MyDataBase.Columns.OPERATOR, "№ of operator " + random);
-//            cv[i] = tempValue;
-//
-//        }
-//        myCounterContext.getContentResolver().bulkInsert(ID_FROM_DB, cv);
-//        return cv;
-//    }
-
-
-    @Override
-    protected void onPostExecute(ContentValues[] contentValueses) {
-        super.onPostExecute(contentValueses);
-
-        Log.d(myLog, "onPostExecute");
 
     }
-
-
 }

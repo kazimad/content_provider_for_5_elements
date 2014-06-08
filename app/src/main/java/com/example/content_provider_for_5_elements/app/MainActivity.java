@@ -4,10 +4,12 @@ import android.annotation.TargetApi;
 
 import android.content.ContentUris;
 import android.content.ContentValues;
+import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
@@ -25,34 +27,46 @@ import data_base.MyDataBase;
 
 public class MainActivity extends FragmentActivity implements LoaderManager.LoaderCallbacks<Cursor> {
 
-
-
     public final static Uri ID_FROM_DB = MyContentProvider.CONTENT_URI;
     public static final String myLog = "myLog";
-
+    public static String JsonPath;
     public ListView myView;
-    MyAsyncQueryHendler myAsyncQueryHendler;
+//    MyAsyncQueryHendler myAsyncQueryHendler;
 
 
+    public static String getJsonPath() {
+        return JsonPath;
+    }
 
     @TargetApi(Build.VERSION_CODES.JELLY_BEAN)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+
+        boolean isCDMount = Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED);
+        if (isCDMount) {
+            JsonPath = String.valueOf(getExternalCacheDir());
+
+        } else {
+            JsonPath = String.valueOf(getCacheDir());
+
+        }
+
+
         super.onCreate(savedInstanceState);
+
         setContentView(R.layout.activity_main);
         Log.d(myLog, " content_values");
 
         getContentResolver().delete(ID_FROM_DB, null, null);
         Log.d(myLog, "getContentResolver.delete");
-        myAsyncQueryHendler = new MyAsyncQueryHendler(getContentResolver());
-        CounterTask myTask = new CounterTask(this);
-        myTask.execute();
+        // тут работал  AsyncTask
+//        myAsyncQueryHendler = new MyAsyncQueryHendler(getContentResolver());
+//        CounterTask myTask = new CounterTask(this);
+//        myTask.execute();
 
+        Intent intent = new Intent(this, JsonService.class);
+        startService(intent);
         getSupportLoaderManager().initLoader(1, Bundle.EMPTY, this);
-//////////////////////////////////////////  тут!!!!!!!!!!
-
-
-
 
     }
 
@@ -60,7 +74,7 @@ public class MainActivity extends FragmentActivity implements LoaderManager.Load
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
 
         Log.d(myLog, "On createLoader");
-        return new CursorLoader(this,ID_FROM_DB,null,null,null,null);
+        return new CursorLoader(this, ID_FROM_DB, null, null, null, null);
 
     }
 
@@ -84,8 +98,14 @@ public class MainActivity extends FragmentActivity implements LoaderManager.Load
                 Log.d(myLog, "random = " + random + " id= " + id);
                 ContentValues onClickContentValues = new ContentValues();
 
-                onClickContentValues.put(MyDataBase.Columns.OPERATOR, "№ of operator " + random);
-                myAsyncQueryHendler.startUpdate(1, null, onClickUri, onClickContentValues, null, null);
+                onClickContentValues.put(MyDataBase.Columns.OPERATOR, "№ of Operator " + random);
+
+
+                onClickContentValues.put(MyDataBase.Columns._ID, id);     //????
+
+                getContentResolver().update(onClickUri, onClickContentValues, null, null);
+                // обновление по клику с использованием AsyncTask-a
+//                myAsyncQueryHendler.startUpdate(1, null, onClickUri, onClickContentValues, null, null);
             }
         });
 
@@ -95,7 +115,6 @@ public class MainActivity extends FragmentActivity implements LoaderManager.Load
     public void onLoaderReset(Loader<Cursor> loader) {
 
     }
-
 
 
 }
